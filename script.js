@@ -6,5 +6,8 @@ console.log("input Array: ", inputArray);
 const outputArray = ["U3MUPS100KH", "BC1100", "HF12-135W-X"];
 console.log("output Array: ", outputArray);
 
-const pnListArray = pnList.split(`\n`);
+const pnListArrayStrings = pnList.split(`\n`);
+console.log("pnList Array: ", pnListArrayStrings);
+
+const pnListArray = pnListArrayStrings.map((string) => string.split(";"));
 console.log("pnList Array: ", pnListArray);
