@@ -1,0 +1,14 @@
+upsSelection
+input parametrers:
+	1. UPS Family // E3M, E3L //upsFamily
+	2. System Capacity // outputPower [kVA], LoadpF [0.5 .. 1]
+	3. Redundancy // N, 2N, N+1, internal power module redundancy // redundancy
+	4. Actual load percenage // load percentage [0 ..100%] => Actual load calc // actualLoadPercentage
+	5. battery runtime // minutes // batteryRuntime
+	6. battery type and placement // external, internal, li-ion //batteryTypeAndPlacement
+	7. ingress protection // ip21, ip31 // ingressProtection
+
+output parameters:
+	1. UPS part number and quantity
+	2. rack part number and quantity
+	3. battery part number and quantity
