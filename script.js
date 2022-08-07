@@ -22,30 +22,28 @@ const {
   batteryTypeAndPlacement: "racks",
   ingressProtection: "IP20",
 }; //100 kVA, LoadpF=0.8, 10 min
-// console.log("input Array: ", inputArray);
+
+//put from API to client in future
+const { isxNumber } = { isxNumber: "ISX001000001-001" };
 
 const outputArray = ["U3MUPS100KH", "BC1100", "HF12-135W-X"];
-console.log("output Array: ", outputArray);
+// console.log("output Array: ", outputArray);
 
-const pnListArrayStrings = pnList.split(`\n`);
-// console.log("pnList Array: ", pnListArrayStrings);
+const getBatteryPowertable = (pnList) => {
+  const pnListArrayStrings = pnList.split(`\n`);
+  const pnListArray = pnListArrayStrings.map((string) => string.split(";"));
+  const batteryInfoStartIndex = 41;
+  const batteryInfoEndIndex = batteryInfoStartIndex + 21;
+  const batteryPowerStartIndex = 8;
+  const batteryPowerEndIndex = batteryPowerStartIndex + 6;
 
-const pnListArray = pnListArrayStrings.map((string) => string.split(";"));
+  return pnListArray
+    .slice(batteryInfoStartIndex, batteryInfoEndIndex)
+    .map((row) => row.slice(batteryPowerStartIndex, batteryPowerEndIndex));
+};
 
-const batteryInfoStartIndex = 41;
-const batteryInfoEndIndex = batteryInfoStartIndex + 21;
-const batteryPowerStartIndex = 8;
-const batteryPowerEndIndex = batteryPowerStartIndex + 6;
-
-const batteryPowertable = pnListArray
-  .slice(batteryInfoStartIndex, batteryInfoEndIndex)
-  .map((row) => row.slice(batteryPowerStartIndex, batteryPowerEndIndex));
-
-let powerFromBattery = outputPower * LoadpF * (actualLoadPercentage / 100);
-
-const getMinimumBatteryLength = (batteryPower) => {
+const getMinimumBatteryLength = (batteryPower, powerFromBattery) => {
   let [batteryPrice, Rslope, Scal, Expo, Cap, Volt] = batteryPower;
-
   for (let strings = 1; strings <= 4; strings++) {
     for (let blockInString = 36; blockInString <= 50; blockInString += 2) {
       let powerFromBlock =
@@ -57,25 +55,27 @@ const getMinimumBatteryLength = (batteryPower) => {
           (((Cap * Volt) / powerFromBlock) ** Expo - Rslope)
         ).toFixed(2);
       if (time >= batteryRuntime) {
-        console.log(
-          `string x bat : ${strings}x${blockInString} == time ${time} price ${(
-            batteryPrice *
-            strings *
-            blockInString
-          ).toFixed(0)} USD`
-        );
+        // console.log(
+        //   `string x bat : ${strings}x${blockInString} == time ${time} price ${(
+        //     batteryPrice *
+        //     strings *
+        //     blockInString
+        //   ).toFixed(0)} USD`
+        // );
+
         return [strings, blockInString, batteryPrice * strings * blockInString];
       }
     }
   }
+
   return false;
 };
 
-const getBatteryVariantsTable = (batteryPowertable) => {
+const getBatteryVariantsTable = (batteryPowerTable, powerFromBattery) => {
   let batteryCalculatedLengthPriceTable = [];
-  for (let i = 0; i < batteryPowertable.length; i++) {
-    let batteryPower = batteryPowertable[i];
-    let search = getMinimumBatteryLength(batteryPower);
+  for (let i = 0; i < batteryPowerTable.length; i++) {
+    let batteryPower = batteryPowerTable[i];
+    let search = getMinimumBatteryLength(batteryPower, powerFromBattery);
     if (search) {
       batteryCalculatedLengthPriceTable.push([i, ...search]);
     }
@@ -85,4 +85,8 @@ const getBatteryVariantsTable = (batteryPowertable) => {
   return batteryCalculatedLengthPriceTable;
 };
 
-console.log(getBatteryVariantsTable(batteryPowertable));
+const batteryPowerTable = getBatteryPowertable(pnList);
+
+const powerFromBattery = outputPower * LoadpF * (actualLoadPercentage / 100);
+
+console.log(getBatteryVariantsTable(batteryPowerTable, powerFromBattery));
